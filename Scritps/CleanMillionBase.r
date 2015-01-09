@@ -60,8 +60,6 @@ EloW[i] <-   as.numeric(as.character(sub(".*?[[]WhiteElo (.*?)[]].*", "\\1", tra
 EloB[i] <-   as.numeric(as.character(sub(".*?[[]BlackElo (.*?)[]].*", "\\1", train_raw[i,2])))
 }
 
-
-
 ####################### Get Dates of Games
 Date<-c()
  for(i in 1:N)
@@ -71,8 +69,7 @@ Date[i]<-as.numeric(as.character(Date[i]))
 
 ###################### Get Win/Draw/Loss Informations
 Win<-c()
- NameBlack<-c()
-  NameWhite<-c()
+
  for(i in 1:N){
 if((( sub(".*?Result (.*?). .*", "\\1", train_raw[i,2])))=="1-0"){
   Win[i]<-1} else{
@@ -82,10 +79,14 @@ if((( sub(".*?Result (.*?). .*", "\\1", train_raw[i,2])))=="1-0"){
   Win[i]<-3} else{
   Win[i]<-NA
   }}}
+  }
 
- NameBlack[i]<- sub("\\.", "",sub("\\,", "",gsub("\\s","",sub(".*?[[]Black (.*?)[]].*", "\\1", train_raw[i,2]))))
+###################### Get Player Name
+  NameBlack<-c()
+  NameWhite<-c()
+ for(i in 1:N){
+  NameBlack[i]<- sub("\\.", "",sub("\\,", "",gsub("\\s","",sub(".*?[[]Black (.*?)[]].*", "\\1", train_raw[i,2]))))
   NameWhite[i]<- sub("\\.", "",sub("\\,", "",gsub("\\s","",sub(".*?[[]White (.*?)[]].*", "\\1", train_raw[i,2]))))
-
   }
 
 ########################################## Get Matrix of First 5 moves
@@ -109,15 +110,19 @@ M[i,10]<-gsub(".+\\s+", "", sub(".*?5[.] (.*?) 6[.].*", "\\1", train_raw[i,2]))
               
 Z<-data.frame(Date,EloW,EloB,NameWhite,NameBlack,Win, M)
 Z2<-Z[complete.cases(Z),]
-Z2[1:100,]
+Z2[1:100,] # visually check a few cases
 
-setwd("C:/Users/Empyrean/Desktop/Dropbox/Open Papers/The Evolution of Chess Strategy/CleanedData")
+########### Set Working Directory and Write the Reorganized Data
+setwd("")
 write.csv(Z2,"Part1.csv")
-
+# Repeat for each of the split files
 
 #####################################################################################
+#####################################################################################
+# Data is now easier to work with in R, but some things need to be done to clean the data
 ### Clean second round
-setwd("C:/Users/Empyrean/Desktop/Dropbox/Open Papers/The Evolution of Chess Strategy/CleanedData")
+
+# First read all of the processed data files into a fresh R window
 R1<-read.csv( "Part1.csv")
 R2<-read.csv( "Part2.csv")
 R3<-read.csv( "Part3.csv")
@@ -153,93 +158,17 @@ R32<-read.csv( "Part32.csv")
 R33<-read.csv( "Part33.csv")
 R34<-read.csv( "Part34.csv")
 
-R<-rbind(R1                              ,
-         R2                              ,
-         R3                              ,
-         R4                             ,
-         R5                             ,
-         R6                           ,
-         R7                           ,
-         R8                          ,
-         R9                         ,
-         R10                        ,
-         R11                       ,
-         R12                      ,
-         R13                     ,
-         R14                    ,
-         R15                   ,
-         R16                  ,
-         R17                 ,
-         R18                ,
-         R19               ,
-         R20              ,
-         R21             ,
-         R22            ,
-         R23           ,
-         R24          ,
-         R25         ,
-         R26        ,
-         R27       ,
-         R28      ,
-         R29     ,
-         R30    ,
-         R31   ,
-         R32  ,
-         R33 ,
-         R34)
-         
-         rm(R1                              ,
-         R2                              ,
-         R3                              ,
-         R4                             ,
-         R5                             ,
-         R6                           ,
-         R7                           ,
-         R8                          ,
-         R9                         ,
-         R10                        ,
-         R11                       ,
-         R12                      ,
-         R13                     ,
-         R14                    ,
-         R15                   ,
-         R16                  ,
-         R17                 ,
-         R18                ,
-         R19               ,
-         R20              ,
-         R21             ,
-         R22            ,
-         R23           ,
-         R24          ,
-         R25         ,
-         R26        ,
-         R27       ,
-         R28      ,
-         R29     ,
-         R30    ,
-         R31   ,
-         R32  ,
-         R33 ,
-         R34)
-         
-         
-         
+R<-rbind(R1,R2,R3,R4,R5,R6,R7,R8,R9,R10,R11,R12,R13,R14,R15,R16,R17,R18,R19,R20,R21,R22,R23,R24,R25,R26,R27,R28,
+R29,R30,R31,R32,R33,R34)
+
 ############################ Drop Broken Records
+# Start with unique(R$X1), and add to the drop-list anything that does make sense
+# Similar work should be done for R$X2, and other variables of interest
 Drop<- ifelse( R$X1=="" | R$X1==" " |R$X1=="..." | R$X1=="Bh3" | R$X1=="Bh3" | R$X1=="f5" | R$X1=="Nf5" ,1,0)
 R<-R[which(Drop==0),]
 
-Drop<- ifelse( R$Date==1969 ,1,0)
-R<-R[which(Drop==0),]
-
-Drop<- ifelse( R$Date==1970 ,1,0)
-R<-R[which(Drop==0),]
-
-R$Date<-factor(R$Date)
-
-Drop<- ifelse( R$X2=="" | R$X1==" " |R$X1=="0-1" | R$X1=="1-0" | R$X1=="1/2-1/2" | R$X1=="Bf8" | R$X1=="Qf5" ,1,0)
-R<-R[which(Drop==0),]
-
-
+##### Double check that cleaning is good, and hide old factors that were dropped
 R$X2<-factor(R$X2)
 R$X1<-factor(R$X1)
+
+#### R now has the data we want!

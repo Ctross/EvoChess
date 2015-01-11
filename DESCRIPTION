@@ -1,0 +1,12 @@
+Package: EvoChess
+Version: 0.1-5
+Date: 2015-01-11
+Title: An R Package for Exploring the Cultural Evolution of Chess Strategy
+Author: Cody Ross
+Maintainer: Cody Ross <ctross@ucdavis.edu>
+Depends: 
+Suggests: 
+Description: This package provides opening move data, and scripts for studying the cultural evolution of Chess opening strategy.
+License: GPL
+URL: https://github.com/Ctross/EvoChess
+BugReports: https://github.com/Ctross/EvoChess

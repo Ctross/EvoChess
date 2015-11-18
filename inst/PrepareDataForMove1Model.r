@@ -48,7 +48,7 @@ Sfr<-Sfr2[,5:42]
       I1<-array(NA,dim=c(Person,Move,38))   # Count of use of each opening by year
       Ifr<-array(NA,dim=c(Person,Move,38))  # Freq of use of each opening by year
       Iwr<-array(NA,dim=c(Person,Move,38))  # Win ratio of each opening by year
-
+Elo<-c()
 ##################################################### Loop over individuals to get quantities of interest
   for( i in 1:length(Name)){
     F1 <-  R100[which(R100$NameWhite==Name[i]),]
@@ -56,6 +56,9 @@ Sfr<-Sfr2[,5:42]
      Fwin <-F1[which(F1$Win=="1"),]
      Fdraw<-F1[which(F1$Win=="2"),]
      Floss<-F1[which(F1$Win=="3"),]
+     
+     Felo<-mean(R100[which(R100$NameWhite==Name[i]),3])
+     Elo[i]<-Felo
     
      F2win <- table(Fwin$X1,Fwin$Date)
      F2draw <- table(Fdraw$X1,Fdraw$Date)

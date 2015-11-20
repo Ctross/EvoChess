@@ -782,6 +782,51 @@ MuTheta <- array(NA, dim=c(P,M,7))
                 }}}
 
  plot(MuTheta[,2,1]~Elo)
+ 
+ 
+####################### Tertiary plot
+ library(vcd)
+ library(plotrix)
+ library(RColorBrewer)
+ library(ggtern)
+
+ add.alpha <- function(col, alpha=1){
+if(missing(col))
+stop("Please provide a vector of colours.")
+apply(sapply(col, col2rgb)/255, 2,
+function(x)
+rgb(x[1], x[2], x[3], alpha=alpha))
+}
+ Samps<-2000
+IndTheta <- array(NA, dim=c(Samps,P,M,7))
+
+## Reshape Psi
+ for ( p in 1:P){
+ for ( m in 0:(M-1)){
+ for ( d in 1:7){
+      IndTheta[,p,(m+1),d] <- Psi[,p,(m*7)+d];
+                }}}
+
+
+# Set move, and then bind parameters
+   MoveM <-1
+   FreqDat  <-    cbind( as.vector(IndTheta[1:100,,MoveM,2]),as.vector(IndTheta[1:100,,MoveM,6]) ,as.vector(IndTheta[1:100,,MoveM,4]))
+
+suppressMessages(library(ggtern))
+set.seed(1)
+plot <- ggtern(data = data.frame(Ipr = FreqDat[,1],
+Ppr = FreqDat[,2],
+Spr = FreqDat[,3]),
+aes(x=Ipr, y=Ppr, z=Spr))
+plot + geom_density_tern(n = 200,
+aes(fill  = ..level..,
+alpha = ..level..)) +
+theme_rgbw() +
+labs(title = "Example Density/Contour Plot")    +
+scale_fill_gradient(low = "blue",high = "red")  +
+guides(color = "none", fill = "none", alpha = "none")
+
+
 
 ########################## Everything Below Is SCRAP It worked once on other data
 # It wont run, but it has clues as to how to do things. We will clean this up together.

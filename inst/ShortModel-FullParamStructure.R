@@ -161,10 +161,10 @@ data{
 
 parameters{
 ##################################### In this block we declare our Parameters
-  vector[7*M] Psi_z[P];           # Unscaled individual-level regression parameters, see Matt Trick
-  vector[7*M] MuPsi;              # Population-level Mean regression parameters
-  vector<lower=0>[7*M] SdPsi;     # Dispersion of individual-level parameters from MuPsi
-  corr_matrix[7*M] RhoPsi;        # Correlation of individual-level parameters
+  vector[25*M] Psi_z[P];           # Unscaled individual-level regression parameters, see Matt Trick
+  vector[25*M] MuPsi;              # Population-level Mean regression parameters
+  vector<lower=0>[25*M] SdPsi;     # Dispersion of individual-level parameters from MuPsi
+  corr_matrix[25*M] RhoPsi;        # Correlation of individual-level parameters
 
   real<lower=0,upper=1> iPwr[MPwr];    # Parameterize Missings, prestige win rate
   vector<lower=0,upper=1>[4] iIwr[P];  # Parameterize Missings, individual win rate
@@ -172,9 +172,9 @@ parameters{
 
 transformed parameters{
 ##################################### In this block we transform some Parameters for speed in MCMC
-  vector[7*M] Psi[P];           # Properly scaled individual-level regression parameters, see Matt Trick
+  vector[25*M] Psi[P];           # Properly scaled individual-level regression parameters, see Matt Trick
   
-  { matrix[(7*M),(7*M)] L;      # Local parameter to store the choleksy decomposed covariance matrix
+  { matrix[(25*M),(25*M)] L;      # Local parameter to store the choleksy decomposed covariance matrix
      L <- diag_matrix(SdPsi)*cholesky_decompose(RhoPsi); #  Choleksy decompose of covariance matrix 
 
 # For each individual, their Psi parameters are the mean vector, plus their deviaton from the mean vector Psi_z,
@@ -198,11 +198,13 @@ model{
  real Iwr_local[M,Y];  # Used to store win rate of moves for a given individual
  real Ifr_local[M,Y];  # Used to store play rate of moves for a given individual
 
- real Theta[P,M,7];    # Used to reshape Psi from vector to matrix
+ real Theta[M,25];      # Used to reshape Psi from vector to matrix
 
  matrix[M,Y] Pwr;      # Prestige win rate, mix of data and missing data parameters
 
  real Iwr2_local[M,Y]; # Individual win rate, mix of data and missing data parameters
+ 
+ vector[25] Predictors; # Vector of predictors, local
 
 
 ################################################### Priors
@@ -223,13 +225,6 @@ model{
           Pwr[m,y] <- if_else(NonMissPwr[m,y], Pwr_na[m,y], iPwr[MissCumSumPwr[m,y]]);
                 }}
                             
-############################## Reshape Main Regression Parameters
- for ( p in 1:P){
- for ( m in 0:(M-1)){
- for ( d in 1:7){
-      Theta[p,(m+1),d] <- Psi[p,(m*7)+d];
-                }}}
-
 #############################################  Probability function begins here
 #### We iterate the following code for each individual
  for ( p in 1:P){
@@ -248,6 +243,12 @@ model{
       Iwr2_local[m,y] <- Iwr_local[m,y]; 
        } 
                }} 
+               
+############################## Reshape Main Regression Parameters
+ for ( m in 0:(M-1)){
+ for ( d in 1:25){
+      Theta[(m+1),d] <- Psi[p,(m*25)+d];
+                }}
 
 ############################### Loop over years check where y and y-1 have observations 
 ######################## so that an AR-1 auto-regression is well defined
@@ -261,18 +262,35 @@ model{
  if(Years_local[y]==1){
  
 ############################################################# Learning Equations
-# for each move, m, model outcome as a function of predictors unique to that move
- for(m in 1:(M-1)){
-   Alpha[m] <- Theta[p,m,1] +  Theta[p,m,2]*Ifr_local[m,(y-1)] + Theta[p,m,3]*Iwr2_local[m,(y-1)] + Theta[p,m,4]*Sfr[m,(y-1)] + Theta[p,m,5]*Swr[m,(y-1)] + Theta[p,m,6]*Pfr[m,(y-1)] + Theta[p,m,7]*Pwr[m,(y-1)];
-              }
-
-# Fix the intercept on the last move to 0 for identification              
-Alpha[M] <- 0 +  Theta[p,M,2]*Ifr_local[M,(y-1)] + Theta[p,M,3]*Iwr2_local[M,(y-1)] + Theta[p,M,4]*Sfr[M,(y-1)] + Theta[p,M,5]*Swr[M,(y-1)] + Theta[p,M,6]*Pfr[M,(y-1)] + Theta[p,M,7]*Pwr[M,(y-1)];
+Predictors[1]<-1;
+Predictors[2]<-Ifr_local[1,(y-1)];
+Predictors[3]<-Ifr_local[2,(y-1)];
+Predictors[4]<-Ifr_local[3,(y-1)];
+Predictors[5]<-Ifr_local[4,(y-1)];
+Predictors[6]<-Iwr2_local[1,(y-1)];
+Predictors[7]<-Iwr2_local[2,(y-1)];
+Predictors[8]<-Iwr2_local[3,(y-1)];
+Predictors[9]<-Iwr2_local[4,(y-1)];
+Predictors[10]<-Sfr[1,(y-1)];
+Predictors[11]<-Sfr[2,(y-1)];
+Predictors[12]<-Sfr[3,(y-1)];
+Predictors[13]<-Sfr[4,(y-1)];
+Predictors[14]<-Swr[1,(y-1)];
+Predictors[15]<-Swr[2,(y-1)];
+Predictors[16]<-Swr[3,(y-1)];
+Predictors[17]<-Swr[4,(y-1)];
+Predictors[18]<-Pfr[1,(y-1)];
+Predictors[19]<-Pfr[2,(y-1)];
+Predictors[20]<-Pfr[3,(y-1)];
+Predictors[21]<-Pfr[4,(y-1)];
+Predictors[22]<-Pwr[1,(y-1)];
+Predictors[23]<-Pwr[2,(y-1)];
+Predictors[24]<-Pwr[3,(y-1)];
+Predictors[25]<-Pwr[4,(y-1)];
 
 # transform Alpha with softmax and then model the outcome vector from a multinomial distribution
-   I2_local ~ multinomial(softmax(Alpha));
+   I2_local ~ multinomial(softmax(Theta* Predictors));
       }
-      
       }
       }
 }'
@@ -291,9 +309,9 @@ fitChess <- stan(model_code=model_code, data = model_dat, init=0, pars=c("MuPsi"
 
   SAMP<-2000
 
-  MuTheta <- array(NA,dim=c(M,7))
-   SdTheta <- array(NA,dim=c(M,7))
-  RawTheta <- array(NA,dim=c(SAMP,M,7))
+  MuTheta <- array(NA,dim=c(M,25))
+   SdTheta <- array(NA,dim=c(M,25))
+  RawTheta <- array(NA,dim=c(SAMP,M,25))
        for ( m in 0:(M-1)){
        for ( d in 1:7){
         RawTheta[,(m+1),d] <-( MuPsi[,(m*7)+d] )

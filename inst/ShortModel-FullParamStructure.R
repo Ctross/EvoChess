@@ -210,14 +210,14 @@ model{
 ################################################### Priors
  MuPsi ~ normal(0,1);    # Regularize mean vector 
 
- SdPsi ~ cauchy(0,2.5);  # Regularize dispersion vector 
+ SdPsi ~ cauchy(0,1);    # Regularize dispersion vector 
   
  for ( p in 1:P){
    Psi_z[p] ~ normal(0,1);  # see Matt Trick
-   iIwr[p] ~ beta(2,2);     # Weak information for missing win rate for each move in individual p
+   iIwr[p] ~ beta(1,1);     # Weak information for missing win rate for each move in individual p
                 }
 
-  iPwr ~ beta(2,2);         # Weak information for missing win rate for each move in prestige data
+  iPwr ~ beta(1,1);         # Weak information for missing win rate for each move in prestige data
   
 ################# Parameterize Missing Values and Build Data/Missing-Data-Parameter Matrix, Prestige win rate
   for(m in 1:M){
